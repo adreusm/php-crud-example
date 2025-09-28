@@ -33,17 +33,22 @@ set_error_handler([$errorHandler, 'handleError']);
 
 $database = new Database($config, $errorHandler);
 
-$parts = explode("/", $_SERVER['REQUEST_URI']);
-
-if ($parts[1] != "books") {
-    http_response_code(404);
-    exit;
-}
-
-$bookId = $parts[2] ?? null;
-
 $bookRepository = new BookRepository($database);
 
 $bookController = new BookController($bookRepository);
 
-$bookController->processRequest($_SERVER['REQUEST_METHOD'], $bookId);
+$path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+
+$router = new Router();
+
+// Books
+
+$router->add("/books", function() use ($bookController) {
+    $bookController->processRequest($_SERVER['REQUEST_METHOD'], null);
+});
+
+$router->add("/books/{id}", function($id) use ($bookController) {
+    $bookController->processRequest($_SERVER['REQUEST_METHOD'], $id);
+});
+
+$router->dispatch($path);

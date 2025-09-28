@@ -33,6 +33,27 @@ class BookRepository
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    public function getByIsbn(string $isbn, ?string $excludeBookId = null): array | false 
+    {
+        $sql = "SELECT * FROM books WHERE isbn = :isbn";
+
+        if ($excludeBookId) {
+            $sql .= " AND id != :exclude_id";
+        }
+
+        $stmt = $this->conn->prepare($sql);
+
+        $stmt->bindValue(':isbn', $isbn);
+
+        if ($excludeBookId) {
+            $stmt->bindValue(":exclude_id", $excludeBookId, PDO::PARAM_INT);
+        }
+
+        $stmt->execute();
+
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
     public function create(array $data): string
     {
         $sql = "INSERT INTO books (title, author_id, category_id, isbn, price, publication_year, pages) 
